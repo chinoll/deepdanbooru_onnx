@@ -3,3 +3,7 @@
 *.jpg
 __pycache__
 deepdanbooru_onnx.egg-info
+dist
+dist/*
+build
+build/*
