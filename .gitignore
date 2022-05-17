@@ -1,0 +1,4 @@
+*.onnx
+*.txt
+*.jpg
+__pycache__
