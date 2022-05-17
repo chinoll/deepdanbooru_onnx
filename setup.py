@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='deepdanbooru_onnx',
-    version='0.0.1',
+    version='0.0.2',
     description='anime image classification',
     author='chinoll',
     author_email='chinoll@chinoll.org',
