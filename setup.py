@@ -1,8 +1,12 @@
 from setuptools import setup, find_packages
 
+from pathlib import Path
+this_directory = Path(__file__).parent
+long_description = (this_directory / "README.md").read_text(encoding="utf-8")
+
 setup(
     name='deepdanbooru_onnx',
-    version='0.0.2',
+    version='0.0.5',
     description='anime image classification',
     author='chinoll',
     author_email='chinoll@chinoll.org',
@@ -13,5 +17,7 @@ setup(
     classifiers=[
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'Programming Language :: Python :: 3 :: Only',
-        'Operating System :: OS Independent']
+        'Operating System :: OS Independent'],
+    long_description_content_type="text/markdown",
+    long_description=long_description,
 )

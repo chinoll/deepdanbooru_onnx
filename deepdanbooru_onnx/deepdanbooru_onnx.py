@@ -57,6 +57,9 @@ def download_model():
     tags_length = 133810
 
     home = str(Path.home()) + "/.deepdanbooru_onnx/"
+    if not os.path.exists(home):
+        os.mkdir(home)
+
     model_name = "deepdanbooru.onnx"
     tags_name = "tags.txt"
 
