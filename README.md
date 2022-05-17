@@ -24,3 +24,4 @@ print(list(danbooru(['test1.jpg','test2.jpg'])))
 - [ ] 结果缓存
 - [ ] 提供WEB接口
 - [ ] 模型量化
+- [ ] 精度更高的模型(slow)
