@@ -7,6 +7,7 @@ import requests
 import hashlib
 from typing import List, Union
 import shutil
+from pathlib import Path
 
 def process_image(image:Image.Image) -> np.ndarray:
     '''
@@ -14,6 +15,7 @@ def process_image(image:Image.Image) -> np.ndarray:
     :param image: the image to convert
     :return: the numpy array
     '''
+
     image = image.convert("RGB").resize((512,512))
     image = np.array(image).astype(np.float32) / 255
     image = image.transpose((2,0,1)).reshape(1,3,512,512).transpose((0,2,3,1))
@@ -30,6 +32,7 @@ def download(url:str, save_path:str, md5:str, length:str) -> bool:
     :param length: the length of the file
     :return: True if the file is downloaded successfully, False otherwise
     '''
+
     try:
         response = requests.get(url=url, stream=True)
         with open(save_path, "wb") as f:
@@ -45,36 +48,42 @@ def download_model():
     Download the model and tags file from the server.
     :return: the path to the model and tags file
     '''
+
     model_url = "https://huggingface.co/chinoll/deepdanbooru/resolve/main/deepdanbooru.onnx"
     tags_url = "https://huggingface.co/chinoll/deepdanbooru/resolve/main/tags.txt"
     model_md5 = "16be4e40ebcc0b1d1915bbf31f00969f"
     tags_md5 = "a3f764de985cdeba89f1d232a4204402"
     model_length = 643993025
     tags_length = 133810
-    if os.path.exists("deepdanbooru.onnx"):
-        if hashlib.md5(open("deepdanbooru.onnx", "rb").read()).hexdigest() != model_md5:
-            os.remove("deepdanbooru.onnx")
-            if not download(model_url, "deepdanbooru.onnx", model_md5, model_length):
+
+    home = str(Path.home()) + "/.deepdanbooru_onnx/"
+    model_name = "deepdanbooru.onnx"
+    tags_name = "tags.txt"
+
+    model_path = home + model_name
+    tags_path = home + tags_name
+    if os.path.exists(model_path):
+        if hashlib.md5(open(model_path, "rb").read()).hexdigest() != model_md5:
+            os.remove(model_path)
+            if not download(model_url, model_path, model_md5, model_length):
                 raise ValueError("Model download failed")
 
     else:
-        if not download(model_url, "deepdanbooru.onnx", model_md5, model_length):
+        if not download(model_url, model_path, model_md5, model_length):
             raise ValueError("Model download failed")
-    model_path = "deepdanbooru.onnx"
 
-    if os.path.exists("tags.txt"):
-        if hashlib.md5(open("tags.txt", "rb").read()).hexdigest() != tags_md5:
-            os.remove("tags.txt")
-            if not download(tags_url, "tags.txt", tags_md5, tags_length):
+    if os.path.exists(tags_path):
+        if hashlib.md5(open(tags_path, "rb").read()).hexdigest() != tags_md5:
+            os.remove(tags_path)
+            if not download(tags_url, tags_path, tags_md5, tags_length):
                 raise ValueError("Tags download failed")
     else:
-        if not download(tags_url, "tags.txt", tags_md5, tags_length):
+        if not download(tags_url, tags_path, tags_md5, tags_length):
             raise ValueError("Tags download failed")
-    tags_path = "tags.txt"
     return model_path, tags_path
 
 class DeepDanbooru:
-    def __init__(self, mode: str = "auto", model_path: Union[str, None] =None, tags_path:Union[str, None]=None, threshold: Union[float, int] = 0.6, pin_memory: bool = False, batch_size: int =1):
+    def __init__(self, mode: str = "auto", model_path: Union[str, None] =None, tags_path: Union[str, None] = None, threshold: Union[float, int] = 0.6, pin_memory: bool = False, batch_size: int = 1):
         '''
         Initialize the DeepDanbooru class.
         :param mode: the mode of the model, "cpu" or "gpu" or "auto"
