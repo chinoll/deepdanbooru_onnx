@@ -17,3 +17,10 @@ img = process_image(img) # iamge to ndarray
 print(danbooru(img))
 print(list(danbooru(['test1.jpg','test2.jpg'])))
 ```
+
+# TODO
+
+- [ ] 提供轻量化模型
+- [ ] 结果缓存
+- [ ] 提供WEB接口
+- [ ] 模型量化
