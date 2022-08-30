@@ -8,6 +8,7 @@ import hashlib
 from typing import List, Union
 import shutil
 from pathlib import Path
+import hashlib
 
 def process_image(image:Image.Image) -> np.ndarray:
     '''
@@ -129,7 +130,8 @@ class DeepDanbooru:
         self.pin_memory = pin_memory
         self.batch_size = batch_size
         self.mode = mode
-    
+        self.cache = {}
+
     def __str__(self) -> str:
         return f"DeepDanbooru(mode={self.mode}, threshold={self.threshold}, pin_memory={self.pin_memory}, batch_size={self.batch_size})"
 
@@ -145,7 +147,7 @@ class DeepDanbooru:
             raise ValueError(f"Image must be {(1,512,512,3)}")
         return self.predict(image)
 
-    def from_path_inference(self,image:str) -> dict:
+    def from_file_inference(self,image:str) -> dict:
         return self.from_image_inference(Image.open(image))
 
     def from_list_inference(self,image:Union[list,tuple]) -> List[dict]:
@@ -153,19 +155,40 @@ class DeepDanbooru:
             image = [process_image(Image.open(i)) for i in image]
         for i in [image[i:i + self.batch_size] for i in range(0, len(image), self.batch_size)]:
             imagelist = i
-            if not self.pin_memory:
-                imagelist = []
-                for j in i:
-                    imagelist.append(process_image(Image.open(j)))
-            _image = np.vstack(imagelist)
-            results = self.inference(_image)
-            for i in range(results.shape[0]):
-                image_tag = {}
-                for tag, score in zip(self.tags, results[i]):
-                    if score >= self.threshold:
-                        image_tag[tag] = score
-                yield image_tag
+            bs = len(i)
+            _imagelist, idx, hashlist = [], [], []
+            for j in range(len(i)):
+                img = Image.open(i[j]) if not self.pin_memory else imagelist[j]
+                image_hash = hashlib.md5(np.array(img).astype(np.uint8)).hexdigest()
+                hashlist.append(image_hash)
+                if image_hash in self.cache:
+                    continue
+                if not self.pin_memory:
+                    _imagelist.append(process_image(img))
+                else:
+                    _imagelist.append(imagelist[j])
+                idx.append(j)
 
+            imagelist = _imagelist
+            if len(imagelist) != 0:
+                _image = np.vstack(imagelist)
+                results = self.inference(_image)
+                results_idx = 0
+            else:
+                results = []
+
+            for i in range(bs):
+                image_tag = {}
+                if i in idx:
+                    hash = hashlist[i]
+                    for tag, score in zip(self.tags, results[results_idx]):
+                        if score >= self.threshold:
+                            image_tag[tag] = score
+                    results_idx += 1
+                    self.cache[hash] = image_tag
+                    yield image_tag
+                else:
+                    yield self.cache[hashlist[i]]
     def inference(self,image):
         return self.session.run(self.output_name, {self.input_name:image})[0]
 
@@ -179,7 +202,7 @@ class DeepDanbooru:
 
     def __call__(self, image) -> Union[dict, List[dict]]:
         if isinstance(image,str):
-            return self.from_path_inference(image)
+            return self.from_file_inference(image)
         elif isinstance(image,np.ndarray):
             return self.from_ndarray_inferece(image)
         elif isinstance(image,list) or isinstance(image,tuple):
@@ -187,4 +210,4 @@ class DeepDanbooru:
         elif isinstance(image,Image.Image):
             return self.from_image_inference(image)
         else:
-            raise ValueError("Image must be a path to an image or a numpy array")
+            raise ValueError("Image must be a file path or a numpy array or list/tuple")
