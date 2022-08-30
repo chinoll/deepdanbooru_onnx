@@ -1,11 +1,10 @@
-[EN](README_EN.md)
 # DeepDanbooru
-动漫图片分类模型
-# 安装
+Anime image classification model
+# intall
 ```
 pip install deepdanbooru-onnx
 ```
-# 使用
+# usage
 ```python
 from deepdanbooru_onnx import DeepDanbooru, process_image
 from PIL import Image
@@ -24,8 +23,8 @@ print(list(danbooru(['test1.jpg','test2.jpg'])))
 
 # TODO
 
-- [ ] 提供轻量化模型
-- [x] 结果缓存
-- [ ] 提供WEB接口
-- [ ] 模型量化
-- [ ] 精度更高的模型(slow) 
+- [ ] Lightweight model
+- [x] results cache
+- [ ] Web API
+- [ ] Model Quantification
+- [ ] High accuracy model
