@@ -1,6 +1,6 @@
 # DeepDanbooru
 Anime image classification model
-# intall
+# install
 ```
 pip install deepdanbooru-onnx
 ```
